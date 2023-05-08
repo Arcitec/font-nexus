@@ -30,7 +30,7 @@ The packages are usually named very similar things on other distros.
 Simply run the following command to perform a clean (re-)build and install everything.
 
 ```sh
-./font-nexus.sh -b -i
+./font-nexus -b -i
 ```
 
 Tip: If you already have a local build, it's faster to skip the `-b` flag to immediately install your existing local build instead of re-building everything.
@@ -38,7 +38,7 @@ Tip: If you already have a local build, it's faster to skip the `-b` flag to imm
 For a list of all arguments (such as installing to a local or custom path), run the following command instead.
 
 ```sh
-./font-nexus.sh -h
+./font-nexus -h
 ```
 
 ## Advanced Usage
@@ -46,7 +46,7 @@ For a list of all arguments (such as installing to a local or custom path), run 
 You can change which Windows font groups will be installed. By default, we save hundreds of megabytes of disk space by skipping all non-Western fonts. You can customize the selected groups by providing a comma-separated environment variable, as follows:
 
 ```sh
-env WINDOWS_FONT_GROUPS="win11,win11_other,win11_japanese" ./font-nexus.sh -b
+env WINDOWS_FONT_GROUPS="win11,win11_other,win11_japanese" ./font-nexus -b
 ```
 
 It's recommended that you always install the default, main groups (the ones that are installed if you don't provide any environment variable). However, your choices will of course depend on your application development needs, such as if you're developing an application for an Asian audience.
