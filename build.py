@@ -58,7 +58,13 @@ def create_font_output(dir_name: str) -> Path:
     return target_path
 
 
-def copy_font(font_file: Path, target_base_path: Path) -> Path:
+def copy_font(
+    font_file: Path, target_base_path: Path, *, target_name: str = None
+) -> Path:
+    # Use the same filename as the source, unless an override was provided.
+    if target_name is None:
+        target_name = font_file.name
+
     # Figure out the generic family name to nicely sort the font.
     font_family = get_font_family(font_file)
     family_path = target_base_path / font_family
@@ -66,7 +72,7 @@ def copy_font(font_file: Path, target_base_path: Path) -> Path:
         family_path.mkdir(mode=0o755, parents=True, exist_ok=True)
 
     # Perform a copy of the contents (not metadata), and throws if error.
-    dest_font_file = family_path / font_file.name
+    dest_font_file = family_path / target_name
     shutil.copyfile(font_file, dest_font_file, follow_symlinks=True)
     print(f'* "{dest_font_file}"')
 
