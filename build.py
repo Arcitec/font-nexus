@@ -224,6 +224,20 @@ def process_microsoft(windows_version: int = 11) -> int:
 
 
 def process_apple() -> int:
+    # NOTE: Apple fonts use advanced technology, as described in their WWDC '20
+    # presentation, "The details of UI typography":
+    # https://developer.apple.com/videos/play/wwdc2020/10175/
+    # However, even though they use very modern font standards, they also render
+    # perfectly on Linux. On a GNOME desktop, use "GNOME Tweaks: Fonts", and set
+    # the fonts as follows:
+    # * "Interface/Document/Legacy Window Titles" should all be "SF Pro Regular, 13".
+    # * "Monospace Text" should be "SF Mono Regular, 13".
+    # Lastly, you MUST also ensure that you have "Hinting: Slight" (GNOME's
+    # default), which is necessary to properly render the shapes. You should
+    # also set "Antialiasing: Standard (grayscale)" to match the rendering style
+    # of macOS, but you're welcome to use "subpixel" if you own a low-resolution
+    # display (which won't be as faithful to the font shapes, though).
+
     # Fetch the URLs for all DMG packages.
     raw_html = get_web_text("https://developer.apple.com/fonts/")
     dmg_urls = re.findall(r'(?m)http[^"]+?\.dmg', raw_html)
