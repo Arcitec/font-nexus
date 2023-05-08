@@ -400,7 +400,7 @@ def process_apple() -> int:
         font_families[font_family].append(font_file)
 
     for font_family in sorted(font_families.keys()):
-        plain_names = [x.name for x in font_families[font_family]]
+        plain_names = sorted([x.name for x in font_families[font_family]])
         print(f"* {font_family}: {', '.join(plain_names)}")
     print("")
 
