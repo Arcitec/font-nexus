@@ -69,7 +69,7 @@ fi
 
 # Build the fonts.
 if [[ $DO_BUILD -eq 1 ]]; then
-    python "${SCRIPT_DIR}/build.py" || exit 1
+    python3 "${SCRIPT_DIR}/build.py" || exit 1
     DID_NOTHING=0
 fi
 
