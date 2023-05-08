@@ -449,6 +449,6 @@ output_size += process_apple()
 rmtree(TEMP_PATH)
 print(f"Output font size (Total): {bytes_to_mib(output_size)}.\n")
 
-time_elapsed = int(time.time() - time_start)
+time_elapsed = round(time.time() - time_start)
 
 print(f"Build finished in {datetime.timedelta(seconds=time_elapsed)} (H:M:S).")
