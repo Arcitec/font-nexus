@@ -125,7 +125,7 @@ def get_font_family(font_file: Path) -> str:
             # This crazy pattern comes from "man FcPatternFormat", and it simply
             # expands every font family name and the language of that name,
             # on individual lines.
-            "%{[]family,familylang{%{family} (%{familylang})\n}}",
+            r"%{[]family,familylang{%{family} (%{familylang})\n}}",
             str(font_file.absolute()),
         ]
     )
