@@ -491,12 +491,17 @@ for dep in deps:
         )
         exit(1)
 
+# Determine which Windows version we're using as source.
+# NOTE: The user can provide the environment variable to change the version,
+# but it isn't recommended, since older Windows releases contain older fonts.
+windows_version = int(os.getenv("WINDOWS_VERSION", "11"), 10)
+
 # Build the font collections.
 time_start = time.time()
 
 rmtree(OUTPUT_PATH)  # Remove any leftover files.
 output_size = 0
-output_size += process_microsoft()
+output_size += process_microsoft(windows_version)
 output_size += process_apple()
 rmtree(TEMP_PATH)
 print(f"Output font size (Total): {bytes_to_mib(output_size)}.\n")
