@@ -35,7 +35,7 @@ Simply run the following command to perform a clean (re-)build and install every
 
 Tip: If you already have a local build, it's faster to skip the `-b` flag to immediately install your existing local build instead of re-building everything.
 
-For a list of all arguments, run the following command instead.
+For a list of all arguments (such as installing to a local or custom path), run the following command instead.
 
 ```sh
 ./font-nexus.sh -h
