@@ -105,7 +105,7 @@ def download_if_newer(url: str, output_path: Path) -> None:
             "--timestamping",
             # We must change the output directory prefix. We cannot use wget's
             # "output filename" option, because it deletes the target and thereby
-            # always creates a new file, thus never working properly.
+            # always creates a new file, thus conflicting with "--timestamping".
             "--directory-prefix",
             str(output_path.absolute()),
             # The output filename will be based on whatever filename the server
@@ -246,8 +246,8 @@ def process_apple() -> int:
         exit(1)
 
     # Download any missing or modified DMG files.
-    # NOTE: This is incredibly fast if "temp" already exists, since it only
-    # downloads the files if they've changed since last time.
+    # NOTE: This is incredibly fast if local DMGs already exist, since it only
+    # downloads the files again if they've changed since last time.
     print("Downloading new or updated Apple font DMG files...")
     process_dmgs = []
     dmg_source_path = SOURCE_PATH / "apple-dmgs"
