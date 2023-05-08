@@ -196,8 +196,11 @@ def process_microsoft(windows_version: int = 11) -> int:
 
     # Figure out which filters we want to use. By default, we skip all Asian fonts,
     # since their files are utterly humongous.
+    # NOTE: The AUR package's win10 and win11 releases both follow these names.
     # NOTE: The user can provide the environment variable to change the groups.
-    enabled_ms_groups = os.getenv("WINDOWS_FONT_GROUPS", "win11,win11_other")
+    enabled_ms_groups = os.getenv(
+        "WINDOWS_FONT_GROUPS", f"win{windows_version},win{windows_version}_other"
+    )
     enabled_ms_groups = enabled_ms_groups.split(",")
 
     # Analyze groups and their total filesizes, and validate file existence.
