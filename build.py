@@ -159,6 +159,27 @@ def process_microsoft(windows_version: int = 11) -> int:
         )
         exit(1)
 
+    # Create a lowercase filename -> actual on-disk filename (Path) lookup table.
+    # NOTE: This is necessary because Windows is case-insensitive, and Microsoft
+    # periodically changes the casing of their fonts, which won't change on-disk
+    # if the person already had the previous filename. So anyone who copies the
+    # fonts from a non-fresh Windows installation will still have the "old names".
+    # The only thing we can trust is that the actual filenames for all fonts will
+    # exist (news/updates), but we can't trust the filename casing of any of them.
+    local_file_map = {}
+    for local_file in source_fonts.glob("*"):
+        if local_file.is_file():
+            lower_name = local_file.name.lower()
+            # Sanity check. It should be impossible to have clashing names with
+            # different case, since Windows is case-insensitive, but this protects
+            # against messy font collections that have passed through other disks.
+            if lower_name in local_file_map:
+                print(
+                    f'Clashing files discovered for "{lower_name}": "{local_file}" and "{local_file_map[lower_name]}" have the same name. Please fix your source Fonts directory, and ensure that it comes from a fully updated Windows {windows_version} installation.'
+                )
+                exit(1)
+            local_file_map[lower_name] = local_file
+
     # Fetch font groups from Arch's AUR package (for easy filtering of unwanted fonts).
     # NOTE: The given "windows_version" must point at a valid PKGSPEC. Historically,
     # all AUR packages for Windows 10 and 11 fonts have used this naming pattern.
@@ -175,35 +196,55 @@ def process_microsoft(windows_version: int = 11) -> int:
 
     # Figure out which filters we want to use. By default, we skip all Asian fonts,
     # since their files are utterly humongous.
-    # NOTE: The user can specify the environment variable to change the groups.
+    # NOTE: The user can provide the environment variable to change the groups.
     enabled_ms_groups = os.getenv("WINDOWS_FONT_GROUPS", "win11,win11_other")
     enabled_ms_groups = enabled_ms_groups.split(",")
 
     # Analyze groups and their total filesizes, and validate file existence.
-    group_stats = {"enabled": [], "disabled": [], "size_enabled": 0, "size_disabled": 0}
+    # NOTE: We'll use the AUR package's expected filenames as reference/target,
+    # since they base their case-sensitive filenames on the latest Windows ISO.
+    to_install = {}
+    group_stats = {
+        "enabled": [],
+        "disabled": [],
+        "total_size_enabled": 0,
+        "total_size_disabled": 0,
+    }
     for group_name in sorted(font_groups.keys()):
+        install_this_group = group_name in enabled_ms_groups
         group_size = 0
-        for font_file in font_groups[group_name]:
-            font_file = source_fonts / font_file
-            if not font_file.is_file():
+
+        for expected_font_file in font_groups[group_name]:
+            # Perform a lowercase file lookup, to support messy "source" folders.
+            lower_font_file = expected_font_file.lower()
+            if lower_font_file not in local_file_map:
                 print(
-                    f'Missing "{font_file}" for group "{group_name}". Please fix your source Fonts directory, and ensure that it comes from a fully updated Windows {windows_version} installation.'
+                    f'Missing "{expected_font_file}" for group "{group_name}". Please fix your source Fonts directory, and ensure that it comes from a fully updated Windows {windows_version} installation.'
                 )
                 exit(1)
-            group_size += font_file.stat().st_size
+
+            actual_font_file = local_file_map[lower_font_file]
+            group_size += actual_font_file.stat().st_size
+
+            # Store a mapping of the on-disk name and expected (target) name.
+            if install_this_group:
+                to_install[lower_font_file] = {
+                    "target_name": expected_font_file,
+                    "source_path": actual_font_file,
+                }
+
+        group_stats["enabled" if install_this_group else "disabled"].append(
+            {"group_name": group_name, "group_size": group_size}
+        )
 
         group_stats[
-            "enabled" if group_name in enabled_ms_groups else "disabled"
-        ].append({"group_name": group_name, "group_size": group_size})
-
-        group_stats[
-            "size_enabled" if group_name in enabled_ms_groups else "size_disabled"
+            "total_size_enabled" if install_this_group else "total_size_disabled"
         ] += group_size
 
     # Display statistics for the enabled and disabled groups.
     for x in ["enabled", "disabled"]:
         print(
-            f"{x.capitalize()} Microsoft font groups ({bytes_to_mib(group_stats[f'size_{x}'])}):"
+            f"{x.capitalize()} Microsoft font groups ({bytes_to_mib(group_stats[f'total_size_{x}'])}):"
         )
         for group_info in group_stats[x]:
             print(
@@ -217,12 +258,14 @@ def process_microsoft(windows_version: int = 11) -> int:
     # Scan all enabled font groups and copy them into the correct output directories, sorted by family name.
     print("Copying selected Microsoft fonts...")
     final_size = 0
-    for group_name in font_groups:
-        if group_name in enabled_ms_groups:
-            for font_file in font_groups[group_name]:
-                font_file = source_fonts / font_file
-                target_file = copy_font(font_file, target_path)
-                final_size += target_file.stat().st_size
+    for k in sorted(to_install.keys()):
+        font_info = to_install[k]
+
+        # Copy using the case-sensitive, expected filename instead of the source's name.
+        target_file = copy_font(
+            font_info["source_path"], target_path, target_name=font_info["target_name"]
+        )
+        final_size += target_file.stat().st_size
 
     print(f"\nOutput font size (Microsoft): {bytes_to_mib(final_size)}.\n")
 
